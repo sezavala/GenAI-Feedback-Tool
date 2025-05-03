@@ -28,8 +28,10 @@ The GenAI Feedback Tool is a research-driven project developed to solve the prob
 - Google Sheets Automation
 
 ## Project Structure
-├── Main.gs                # Main entry point; connects modules \n
-├── GenAI_Rating.gs        # Core GPT interaction and scoring logic \n
+├── Main.gs                # Main entry point; connects modules 
+
+├── GenAI_Rating.gs        # Core GPT interaction and scoring logic 
+
 ├── New_Submission.gs      # Canvas + Google Docs integration
 
 ## How It Works
