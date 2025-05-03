@@ -22,7 +22,7 @@ The GenAI Feedback Tool is a research-driven project developed to solve the prob
 ## Technologies Used
 
 - Google Apps Script (JavaScript)
-- OpenAI API (GPT-4 + Function Calling)
+- OpenAI API (GPT-3.5 Turbo + Function Calling)
 - Canvas LMS API
 - Google Docs API
 - Google Sheets Automation
@@ -40,19 +40,9 @@ The GenAI Feedback Tool is a research-driven project developed to solve the prob
 2. `GenAI_Rating.gs` builds a rubric-aligned evaluation prompt and uses GPT to return structured feedback via function-calling.
 3. `Main.gs` schedules and manages the full flow, writing the results into Sheets for review.
 
-## Setup Instructions
-
-1. Clone or connect this repository to your [Apps Script](https://script.google.com/) project.
-2. Create a new Google Sheet with Canvas ID and submission fields.
-3. Set up Google Cloud project for API access (Canvas + Docs).
-4. Add your `OPENAI_API_KEY` and `CANVAS_API_TOKEN` as script properties.
-5. Schedule a time-driven trigger to run `main()` every 30–60 minutes.
-
 ## Currently Working On
 
 - Canvas write-back support (gradebook updates)
-- Instructor-facing UI for feedback customization
-- Feedback trend dashboard (Sheet/Looker integration)
 
 ## License
 
