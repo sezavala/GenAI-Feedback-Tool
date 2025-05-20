@@ -10,8 +10,10 @@ function getNewSubmissions(courseId, assignmentId) {
   };
 
   for (let sheet of sheetNames) {
+    if(sheet !== 'Micro-Internship A'){
+      break;
+    }
     sheet_ids.push(process_sheet(sheet));
-    break;
   }
   
   for (let [index, sheetData] of sheet_ids.entries()) {
@@ -43,7 +45,6 @@ function getNewSubmissions(courseId, assignmentId) {
               if (doc_text_response.getResponseCode() === 200) {
                 let cleaned_text = doc_text_response.getContentText().replace(/\r\n/g, '\n').replace(/\n{2,}/g, '\n\n');
                 submission[id] = cleaned_text; 
-                break;
               } else {
                 Logger.log(`Error fetching doc for ID ${id}: ${export_url}`);
               }
@@ -51,7 +52,7 @@ function getNewSubmissions(courseId, assignmentId) {
               Logger.log(`No Google Doc URL found for ID ${id}`);
             }
           } catch (error) {
-            Logger.log(`Error processing submission for ID ${id}: ${error}`);
+            Logger.log(`Error processing submission for ID ${id} ${assignment.submission_history[0].submission_data[0].text}: ${error}`);
           }
         }
       } else {
