@@ -33,11 +33,11 @@ The GenAI Feedback Tool is a research-driven system developed to address the cha
 
 ## Project Structure
 
-├── Main.gs # Main entry point; connects modules
-├── GenAI_Rating.gs # GPT scoring logic using rubric prompts
-├── New_Submissions.gs # Canvas + Google Docs integration logic
-├── Micro_Rubric.gs # Section-specific prompt content
-├── pushToCanvas.gs # Posts grades/comments back to Canvas (in progress)
+- `Main.gs` — Main entry point; connects modules  
+- `GenAI_Rating.gs` — GPT scoring logic using rubric prompts  
+- `New_Submissions.gs` — Canvas + Google Docs integration logic  
+- `Micro_Rubric.gs` — Section-specific prompt content  
+- `pushToCanvas.gs` — Posts grades/comments back to Canvas (in progress)
 
 ## How It Works
 
