@@ -1,193 +1,88 @@
-function rateSubmission(submission, data, feedback, rubric) {
-  const system_content = `You are grading the blog writing process of Computer Science students during their Summer Open-Source Experience. Use the rubric to guide feedback. Rubric: ${rubric}. Provide direct feedback to students.`;
+function getNewSubmissions(courseId, assignmentId) {
+  const headers = { Authorization: 'Bearer ' + CANVAS_API_TOKEN };
+  const baseUrl = `https://cti-courses.instructure.com/api/v1/courses/${courseId}/assignments/${assignmentId}/submissions?include[]=submission_history&per_page=100`;
+  
+  const allSubmissions = fetchAllPaginated(baseUrl, headers);
+  const canvasIdsPerSheet = getCanvasIdsFromSheets();
+  const data = {};
 
-  const fineTuningResponse = UrlFetchApp.fetch("https://api.openai.com/v1/fine_tuning/jobs?limit=3", {
-    method: "GET",
-    headers: {
-      Authorization: "Bearer " + OPENAI_API_KEY,
-      "Content-Type": "application/json"
-    },
-    muteHttpExceptions: true
-  });
+  for (let sheet in canvasIdsPerSheet) {
+    const idsArray = canvasIdsPerSheet[sheet];
+    const ids = new Set(canvasIdsPerSheet[sheet].map(id => String(parseInt(id, 10))));
+    data[sheet] = {};
+    for (const submission of allSubmissions) {
+      const id = submission.user_id;
+      if (!ids.has(id.toString())) continue;
+      if (submission.workflow_state === 'unsubmitted' || submission.workflow_state === 'graded') continue;
 
-  if (fineTuningResponse.getResponseCode() !== 200) {
-    Logger.log("Error fetching fine-tuning jobs: " + fineTuningResponse.getContentText());
-    return;
-  }
+      try {
+        const text = submission.submission_history?.[0]?.submission_data?.[0]?.text;
+        const match = text?.match(/https:\/\/docs\.google\.com\/document\/d\/[^\s"<>]+/);
+        if (!match) continue;
 
-  const fineTunedJobs = JSON.parse(fineTuningResponse.getContentText()).data.filter(job => job.fine_tuned_model);
-  if (fineTunedJobs.length === 0) {
-    Logger.log("No fine-tuned models available.");
-    return;
-  }
+        const docId = match[0].split("/d/")[1].split("/")[0];
+        const docUrl = `https://docs.google.com/document/d/${docId}/export?format=txt`;
+        const docResponse = UrlFetchApp.fetch(docUrl);
+        if (docResponse.getResponseCode() !== 200) continue;
 
-  const fineTuneModel = fineTunedJobs[0].fine_tuned_model;
+        const cleaned = docResponse.getContentText().replace(/\r\n/g, '\n').replace(/\n{2,}/g, '\n\n');
+        data[sheet][id] = cleaned;
 
-  for (let sheetName in submission) {
-    const sheetData = submission[sheetName];
-    for (let studentId in sheetData) {
-      const studentText = sheetData[studentId];
-      let fullPrompt;
-      for(let section in feedback){
-        if(section.startsWith("sec")){
-          let prompt = feedback[section];
-          fullPrompt = `${prompt}\n\nStudent Work:\n${studentText}
-          Respond ONLY with plain English sentences. Do NOT use JSON, do NOT number the sentences, and do NOT include extra formatting or Markdown.
-`;
-
-          const payload = {
-            model: fineTuneModel,
-            messages: [
-              { role: "system", content: system_content },
-              { role: "user", content: fullPrompt }
-            ]
-          };
-
-          const chatResponse = UrlFetchApp.fetch(
-            "https://api.openai.com/v1/chat/completions",
-            {
-              method: "POST",
-              headers: {
-                Authorization: "Bearer " + OPENAI_API_KEY,
-                "Content-Type": "application/json"
-              },
-              payload: JSON.stringify(payload),
-              muteHttpExceptions: true
-            }
-          );
-
-          if (chatResponse.getResponseCode() !== 200) {
-            Logger.log(`Error for ${studentId} in ${sheetName}: ` + chatResponse.getContentText());
-            sheetData[studentId] = "Error generating feedback";
-            continue;
-          }
-
-          const responseJson = JSON.parse(chatResponse.getContentText());
-          const response = responseJson.choices[0].message.content.trim().replace(/\n/g, '');          
-          data[section] = response;
-        } else if(section.endsWith("Score")){
-          fullPrompt = `Student Work: ${studentText} 
-          Rate how the student followed each section of this rubric, then average the score: ${JSON.stringify(feedback, null, 2)} 
-          Score range: ${feedback[section]} 
-          Grade Strictly if needed.
-          Respond ONLY in this format (no explanation): { "Score": <number> } 
-          Example: { "Score": 5 } Now provide the score.`;
-
-          const payload = {
-            model: fineTuneModel,
-            messages: [
-              { role: "system", content: system_content },
-              { role: "user", content: fullPrompt }
-            ]
-          };
-
-          const chatResponse = UrlFetchApp.fetch(
-            "https://api.openai.com/v1/chat/completions",
-            {
-              method: "POST",
-              headers: {
-                Authorization: "Bearer " + OPENAI_API_KEY,
-                "Content-Type": "application/json"
-              },
-              payload: JSON.stringify(payload),
-              muteHttpExceptions: true
-            }
-          );
-
-          if (chatResponse.getResponseCode() !== 200) {
-            Logger.log(`Error for ${studentId} in ${sheetName}: ` + chatResponse.getContentText());
-            sheetData[studentId] = "Error generating feedback";
-            continue;
-          }
-
-          const responseJson = JSON.parse(chatResponse.getContentText());
-          const response = responseJson.choices[0].message.content.trim().replace(/\n/g, '');          
-          const match = response.match(/"Score"\s*:\s*(\d+)/);
-          if (match && match[1]) {
-            data[section] = parseInt(match[1]);
-          } else {
-            Logger.log(`Failed to parse score from response: ${response}`);
-            data[section] = "Invalid score format";
-}
-
-        } else{
-          fullPrompt = `Student Work: ${studentText}\n\nTake a look at how the feedback the student recieved: ${JSON.stringify(data, null, 2)}\n\nProvide overall feedback on how the student did, 4-5 sentences. Respond ONLY with plain English sentences. Do NOT use JSON, do NOT number the sentences, and do NOT include extra formatting or Markdown.`;
-          
-          const payload = {
-            model: fineTuneModel,
-            messages: [
-              { role: "system", content: system_content },
-              { role: "user", content: fullPrompt }
-          ]};
-        
-          const chatResponse = UrlFetchApp.fetch("https://api.openai.com/v1/chat/completions", {
-            method: "POST",
-            headers: {
-              Authorization: "Bearer " + OPENAI_API_KEY,
-              "Content-Type": "application/json"
-            },
-            payload: JSON.stringify(payload),
-            muteHttpExceptions: true
-          });
-
-          if (chatResponse.getResponseCode() !== 200) {
-            Logger.log(`Error for ${studentId} in ${sheetName}: ` + chatResponse.getContentText());
-            sheetData[studentId] = "Error generating feedback";
-            continue;
-          }
-
-          const responseJson = JSON.parse(chatResponse.getContentText());
-          const response = responseJson.choices[0].message.content.trim().replace(/\n/g, '');          
-          data[section] = response;
-        }
+      } catch (err) {
+        continue;
       }
-      submission[sheetName][studentId] = data;
-      console.log(submission[sheetName][studentId])
-      gradeSubmission(sheetName, sheetData, studentId);
-      Logger.log(`Graded ${studentId}`)
     }
   }
+  return data;
 }
 
-function gradeSubmission(sheetName, sheetData, studentId) {
-  const feedback = sheetData[studentId];
+function process_sheet(sheet){
+  var dict = {};
+  var student_ids = [];
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var active_worksheet = ss.getSheetByName(sheet);
+  var data_worksheet = active_worksheet.getDataRange().getValues();
+  var canvas_id_col = data_worksheet[0].indexOf('Canvas ID');
+
+  for(var student_row = 1; student_row < data_worksheet.length; student_row++) {
+    var canvas_id = data_worksheet[student_row][canvas_id_col];
+    if(canvas_id == ""){
+      break;
+    }
+    student_ids.push(canvas_id)
+  }
+
+  dict[sheet] = student_ids;
+  return dict;
+}
+
+function fetchAllPaginated(url, headers) {
+  let results = [];
+  while (url) {
+    const response = UrlFetchApp.fetch(url, { headers });
+    if (response.getResponseCode() !== 200) break;
+
+    results = results.concat(JSON.parse(response.getContentText()));
+    const linkHeader = response.getHeaders()['Link'];
+    const nextMatch = linkHeader && linkHeader.match(/<([^>]+)>;\s*rel="next"/);
+    url = nextMatch ? nextMatch[1] : null;
+  }
+  return results;
+}
+
+
+function getCanvasIdsFromSheets() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
-  const sheet = ss.getSheetByName(sheetName);
-  const data = sheet.getDataRange().getValues();
+  const sheetNames = ['Micro-Internship A', 'Micro-Internship B', 'Micro-Internship C', 'Micro-Internship D', 'Micro-Internship E'];
+  const map = {};
 
-  const canvasIdCol = data[0].indexOf('Canvas ID');
-
-  for (let key in feedback) {
-    if (key.startsWith("sec_")) {
-      continue;
-    } else if(key.endsWith("Score")){
-      for (let row = 1; row < data.length; row++) {
-        const canvasId = data[row][canvasIdCol];
-        if (canvasId == studentId) {
-          const headerCol = data[0].indexOf(key);
-          if (headerCol !== -1) {
-            data[row][headerCol] = feedback[key];
-          } else {
-            Logger.log(`Column "${key}" not found in sheet "${sheetName}".`);
-          }
-          break;
-        }
-      }
-    } else if(key.endsWith("Feedback")) {
-      for (let row = 1; row < data.length; row++) {
-        const canvasId = data[row][canvasIdCol];
-        if (canvasId == studentId) {
-          const headerCol = data[0].indexOf(key);
-          if (headerCol !== -1) {
-            data[row][headerCol] = feedback[key];
-          } else {
-            Logger.log(`Column "${key}" not found in sheet "${sheetName}".`);
-          }
-          break;
-        }
-      }
-    }
+  for (let name of sheetNames) {
+    const ws = ss.getSheetByName(name);
+    const values = ws.getDataRange().getValues();
+    const col = values[0].indexOf('Canvas ID');
+    const ids = values.slice(1).map(row => row[col]).filter(Boolean);
+    map[name] = ids;
   }
 
-  sheet.getRange(1, 1, data.length, data[0].length).setValues(data);
+  return map;
 }
