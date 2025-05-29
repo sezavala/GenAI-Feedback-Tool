@@ -15,7 +15,7 @@ The GenAI Feedback Tool is a research-driven system developed to address the cha
 
 ## Key Features
 
-- **Sheet-aware ID Filtering**: Grabs only students from specified sheets, improving performance when handling 250+ IDs.
+- **Sheet-aware ID Filtering**: Grabs only students from specified sheets, improving performance when handling 150+ IDs.
 - **Canvas LMS Integration**: Pulls submission metadata and submission history using efficient batch pagination.
 - **Google Docs Parsing**: Extracts and cleans blog content using Google Docs export URLs.
 - **OpenAI GPT Evaluation**: Uses fine-tuned GPT models and carefully crafted prompts to deliver section-specific feedback and scores.
