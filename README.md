@@ -1,54 +1,64 @@
 # GenAI Feedback Tool
 
-An AI-powered system that automates the evaluation of student blog posts using OpenAI's GPT models, designed to scale personalized feedback during the **Summer Open-Source Experience (SOSE)** and similar educational programs.
+An AI-powered grading pipeline that automates the evaluation of student blog posts using OpenAI's GPT models. Built to scale personalized, rubric-aligned feedback across 100+ students participating in the **Summer Open-Source Experience (SOSE)** and similar programs.
 
 ## Overview
 
-The GenAI Feedback Tool is a research-driven project developed to solve the problem of providing timely, consistent, and rubric-aligned feedback to 100+ students writing blog posts throughout the summer. The tool automates:
+The GenAI Feedback Tool is a research-driven system developed to address the challenge of delivering timely, high-quality feedback to a growing student population. It automates the full feedback cycle:
 
-- Fetching student submissions from Canvas LMS
-- Parsing Google Docs for blog content
-- Evaluating content using OpenAI's function-calling via GPT
-- Writing structured scores and feedback back to Google Sheets
+- Extracting student IDs from Google Sheets
+- Fetching submission data from Canvas LMS (with paginated API handling)
+- Parsing blog content from Google Docs
+- Evaluating responses with fine-tuned GPT using custom rubrics
+- Writing scores and feedback back into Google Sheets
+- (Optional) Posting grades and comments to Canvas directly
 
 ## Key Features
 
-- **Canvas LMS Integration**: Pulls submission metadata and student identifiers securely via the Canvas API.
-- **Google Docs Parsing**: Extracts text from student-linked Google Docs using the export API.
-- **OpenAI GPT Evaluation**: Uses fine-tuned GPT models with function-calling for structured, rubric-based feedback.
-- **Google Sheets Automation**: Writes feedback and scores back to Google Sheets for easy instructor access.
-- **Cron Job Support**: Designed to run every 30–60 minutes for real-time grading during high-volume periods.
+- **Sheet-aware ID Filtering**: Grabs only students from specified sheets, improving performance when handling 250+ IDs.
+- **Canvas LMS Integration**: Pulls submission metadata and submission history using efficient batch pagination.
+- **Google Docs Parsing**: Extracts and cleans blog content using Google Docs export URLs.
+- **OpenAI GPT Evaluation**: Uses fine-tuned GPT models and carefully crafted prompts to deliver section-specific feedback and scores.
+- **Google Sheets Automation**: Writes structured responses, scores, and feedback back to the original roster sheets.
+- **Canvas Gradebook Push (In Progress)**: Posts scores and comments back into Canvas using authorized TA credentials.
+- **Cron Job Ready**: Can be scheduled to run every 30–60 minutes to provide real-time grading at scale.
 
 ## Technologies Used
 
 - Google Apps Script (JavaScript)
 - OpenAI API (GPT-3.5 Turbo + Function Calling)
-- Canvas LMS API
-- Google Docs API
+- Canvas LMS API (with pagination)
+- Google Docs Export API
 - Google Sheets Automation
 
 ## Project Structure
-├── Main.gs                # Main entry point; connects modules 
 
-├── GenAI_Rating.gs        # Core GPT interaction and scoring logic 
-
-├── New_Submission.gs      # Canvas + Google Docs integration
+├── Main.gs # Main entry point; connects modules
+├── GenAI_Rating.gs # GPT scoring logic using rubric prompts
+├── New_Submissions.gs # Canvas + Google Docs integration logic
+├── Micro_Rubric.gs # Section-specific prompt content
+├── pushToCanvas.gs # Posts grades/comments back to Canvas (in progress)
 
 ## How It Works
 
-1. `New_Submission.gs` fetches recent Canvas submissions and extracts blog text from Google Docs.
-2. `GenAI_Rating.gs` builds a rubric-aligned evaluation prompt and uses GPT to return structured feedback via function-calling.
-3. `Main.gs` schedules and manages the full flow, writing the results into Sheets for review.
+1. **New_Submissions.gs** uses a paginated Canvas API fetch to collect all submissions, then filters by Canvas IDs listed in each Micro-Internship Sheet.
+2. **GenAI_Rating.gs** generates structured prompts per rubric section, calls GPT via the OpenAI API, and interprets results.
+3. **Main.gs** coordinates which checkpoints to run and what sections to grade.
+4. **(Optional)** `pushToCanvas.gs` pushes scores and comments back to Canvas using the submission comment API.
 
 ## Currently Working On
 
-- Canvas write-back support (gradebook updates)
+- Finalizing Canvas write-back integration
+- Strict handling of blank submissions (auto-score: 0)
+- Generating a feedback summary section using GPT
+- Building out Checkpoint 2 & 3 rubrics
 
 ## License
 
-This project is under development for educational use through the Computing Talent Initiative and is currently unpublished. 
+This project is under development for educational use through the Computing Talent Initiative (CTI) and CSU Monterey Bay. It is not yet publicly licensed or distributed.
 
 ---
 
 Made with purpose by **Sergio Zavala**  
 [LinkedIn](https://www.linkedin.com/in/sergiozavala1) • [Website](https://sergiozavala.dev) • [GitHub](https://github.com/sezavala)
+
