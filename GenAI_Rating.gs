@@ -1,131 +1,67 @@
-function fineTuneModel() {
-  const baseModel = "gpt-3.5-turbo";
-  const fileContent = getTrainingFileContent();
-  const uploadUrl = "https://api.openai.com/v1/files";
-
-  const uploadOptions = {
-    method: "POST",
+function getLatestFineTuneModel() {
+  const response = UrlFetchApp.fetch("https://api.openai.com/v1/fine_tuning/jobs?limit=3", {
+    method: "GET",
     headers: {
-      Authorization: "Bearer " + OPENAI_API_KEY
-    },
-    payload: {
-      purpose: "fine-tune",
-      file: Utilities.newBlob(fileContent, "application/json", "prompt.json")
+      Authorization: "Bearer " + OPENAI_API_KEY,
+      "Content-Type": "application/json"
     },
     muteHttpExceptions: true
-  };
+  });
 
-  const uploadResponse = UrlFetchApp.fetch(uploadUrl, uploadOptions);
-
-  if (uploadResponse.getResponseCode() !== 200) {
-    Logger.log("Error uploading training file: " + uploadResponse.getContentText());
-    return;
-  }
-
-  const uploadData = JSON.parse(uploadResponse.getContentText());
-  const trainingFileId = uploadData.id;
-  Logger.log("📄 Training file uploaded. File ID: " + trainingFileId);
-
-  const fineTuneUrl = "https://api.openai.com/v1/fine_tuning/jobs";
-
-  const fineTunePayload = {
-    training_file: trainingFileId,
-    model: baseModel
-  };
-
-  const fineTuneResponse = UrlFetchApp.fetch(
-    fineTuneUrl,
-    {
-      method: "POST",
-      headers: {
-        Authorization: "Bearer " + OPENAI_API_KEY,
-        "Content-Type": "application/json"
-      },
-      payload: JSON.stringify(fineTunePayload),
-      muteHttpExceptions: true
-    }
-  );
-
-  if (fineTuneResponse.getResponseCode() !== 200) {
-    Logger.log("Error creating fine-tuning job: " + fineTuneResponse.getContentText());
-    return;
-  }
-
-  const fineTuneData = JSON.parse(fineTuneResponse.getContentText());
-  Logger.log("Fine-tuning job created successfully:");
-  Logger.log(JSON.stringify(fineTuneData, null, 2));
-}
-
-function getTrainingFileContent() {
-  const trainingData = [
-    {
-      messages: [
-        { role: "system", content: "You are a helpful grader." },
-        { role: "user", content: "Blog: How I contributed to open-source." },
-        { role: "assistant", content: "Excellent effort with clear technical detail." }
-      ]
-    },
-    {
-      messages: [
-        { role: "user", content: "Blog: My experience fixing bugs." },
-        { role: "assistant", content: "Great clarity, needs slightly more technical depth." }
-      ]
-    }
-  ];
-  return JSON.stringify(trainingData);
-}
-
-function rateSubmission(submission, format, rubric) {
-  const system_content = "You are grading the blog process of Computer Science students during their Summer Open-Source Experience. Provide feedback to the student.";
-
-  const fineTuningResponse = UrlFetchApp.fetch(
-    "https://api.openai.com/v1/fine_tuning/jobs?limit=3",
-    {
-      method: "GET",
-      headers: {
-        Authorization: "Bearer " + OPENAI_API_KEY,
-        "Content-Type": "application/json"
-      },
-      muteHttpExceptions: true
-    }
-  );
-
-  if (fineTuningResponse.getResponseCode() !== 200) {
-    Logger.log("Error fetching fine-tuning jobs: " + fineTuningResponse.getContentText());
+  if (response.getResponseCode() !== 200) {
+    Logger.log("Error fetching fine-tuning jobs: " + response.getContentText());
     return null;
   }
 
-  const fineTuningData = JSON.parse(fineTuningResponse.getContentText());
-  const fineTunedJobs = fineTuningData.data.filter(job => job.fine_tuned_model);
-  if (fineTunedJobs.length === 0) {
-    Logger.log("No completed fine-tuning jobs with a usable model found.");
-    return null;
-  }
+  const fineTunedJobs = JSON.parse(response.getContentText()).data.filter(job => job.fine_tuned_model);
+  return fineTunedJobs.length > 0 ? fineTunedJobs[0].fine_tuned_model : null;
+}
 
-  const fineTuneModel = fineTunedJobs[0].fine_tuned_model;
+function rateSubmission(submission, dataTemplate, feedback, rubric, model) {
+  const system_content = `You are grading the blog writing process of Computer Science students during their Open-Source Experience. Use the rubric to guide feedback. Rubric: ${rubric}. Provide direct feedback to students.`;
 
   for (let sheetName in submission) {
+    Logger.log(`Grading ${sheetName}`);
     const sheetData = submission[sheetName];
 
     for (let studentId in sheetData) {
       const studentText = sheetData[studentId];
+      if (!studentText || studentText.trim() === "" || studentText === "No valid submission") {
+        Logger.log(`Skipping ${studentId} — unsubmitted or missing`);
+        continue;
+      }
 
-      const formatPrompt = `Please return your response as a single valid JSON object. Use only double quotes. Do not wrap the entire JSON in a string. Use this structure:\n${format}`;
-      const prompt = `Assess the student's work and provide feedback for each sub-section using the following rubric:\n${rubric}\n\nStudent Work:\n${studentText}`;
+      // Clone a fresh default data structure per student
+      const studentData = JSON.parse(JSON.stringify(dataTemplate));
 
-      const payload = {
-        model: fineTuneModel,
-        messages: [
-          { role: "system", content: system_content },
-          { role: "user", content: formatPrompt },
-          { role: "user", content: prompt }
-        ],
-        temperature: 0.3
-      };
+      for (let section in studentData) {
+        let fullPrompt;
+        const isScore = section.endsWith("Score");
+        const isFeedback = section.startsWith("Sec");
 
-      const chatResponse = UrlFetchApp.fetch(
-        "https://api.openai.com/v1/chat/completions",
-        {
+        if (isFeedback) {
+          fullPrompt = `${feedback[section]}
+Student Work: ${studentText}
+Respond ONLY with plain English sentences. Do NOT use JSON, do NOT number the sentences, and do NOT include extra formatting or Markdown.`;
+        } else if (isScore) {
+          fullPrompt = `Student Work: ${studentText} 
+Based on the feedback you gave the student here: ${JSON.stringify(studentData, null, 2)}
+Provide ONLY ONE overall score on how the student performed.
+Score range: ${feedback[section]}
+Now reply ONLY in this format (no explanation): { "Score": <number> }.`;
+        } else {
+          fullPrompt = `Student Work: ${studentText}\n\nTake a look at the feedback the student received: ${JSON.stringify(studentData, null, 2)}\n\nProvide overall feedback on how the student did, 4-5 sentences ONLY. Respond ONLY with plain English sentences. Do NOT use JSON, do NOT number the sentences, and do NOT include extra formatting or Markdown.`;
+        }
+
+        const payload = {
+          model: model,
+          messages: [
+            { role: "system", content: system_content },
+            { role: "user", content: fullPrompt }
+          ]
+        };
+
+        const chatResponse = UrlFetchApp.fetch("https://api.openai.com/v1/chat/completions", {
           method: "POST",
           headers: {
             Authorization: "Bearer " + OPENAI_API_KEY,
@@ -133,59 +69,66 @@ function rateSubmission(submission, format, rubric) {
           },
           payload: JSON.stringify(payload),
           muteHttpExceptions: true
+        });
+
+        if (chatResponse.getResponseCode() !== 200) {
+          Logger.log(`Error for ${studentId} in ${sheetName}, section ${section}: ` + chatResponse.getContentText());
+          studentData[section] = "Error generating feedback";
+          continue;
         }
-      );
 
-      if (chatResponse.getResponseCode() !== 200) {
-        Logger.log(`Error for ${studentId} in ${sheetName}: ` + chatResponse.getContentText());
-        sheetData[studentId] = "Error generating feedback";
-        continue;
+        const responseJson = JSON.parse(chatResponse.getContentText());
+        const response = responseJson.choices[0].message.content.trim();
+
+        if (isScore) {
+          try {
+            const parsed = JSON.parse(response);
+            const score = parseInt(parsed["Score"]);
+            if (Number.isInteger(score) && score >= 1 && score <= 5) {
+              studentData[section] = score;
+            } else {
+              studentData[section] = "Invalid score format";
+            }
+          } catch (err) {
+            studentData[section] = "Invalid score format";
+          }
+        } else {
+          studentData[section] = response.replace(/\n/g, ' ');
+        }
       }
 
-      const chatData = JSON.parse(chatResponse.getContentText());
-      const feedbackRaw = chatData.choices[0].message.content;
+      // Store per-student data in submission
+      submission[sheetName][studentId] = studentData;
 
-      try {
-        const parsed = JSON.parse(feedbackRaw);
-        sheetData[studentId] = parsed;
-        gradeSubmission(sheetName, sheetData, studentId);
-      } catch (err) {
-        Logger.log(`Failed to parse GPT feedback for ${studentId} in ${sheetName}`);
-        Logger.log("Raw output: " + feedbackRaw);
-        sheetData[studentId] = feedbackRaw; // fallback
-      }
+      // Write into sheet
+      gradeSubmission(sheetName, submission[sheetName], studentId);
+      Logger.log(`Graded ${studentId}`);
     }
   }
 }
 
-function gradeSubmission(sheetName, sheetData, studentId) {
-  const feedback = sheetData[studentId];
+
+function gradeSubmission(sheetName, data, studentId) {
+  const feedback = data[studentId];
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   const sheet = ss.getSheetByName(sheetName);
-  const data = sheet.getDataRange().getValues();
+  const values = sheet.getDataRange().getValues();
+  const canvasIdCol = values[0].indexOf('Canvas ID');
 
-  const canvasIdCol = data[0].indexOf('Canvas ID');
-
-  for (let key in feedback) {
-    // Skip feedback sections (sec_1_A, sec_2_B, etc.)
-    if (key.startsWith("sec_")) {
-      continue;
-    }
-    if(key.endsWith("Score")){
-      for (let row = 1; row < data.length; row++) {
-        const canvasId = data[row][canvasIdCol];
-        if (canvasId == studentId) {
-          const headerCol = data[0].indexOf(key);
-          if (headerCol !== -1) {
-            data[row][headerCol] = feedback[key];
-          } else {
-            Logger.log(`⚠️ Column "${key}" not found in sheet "${sheetName}".`);
-          }
-          break;
+  for (let row = 1; row < values.length; row++) {
+    const canvasId = values[row][canvasIdCol];
+    if (canvasId == studentId) {
+      for (let key in feedback) {
+        const col = values[0].indexOf(key);
+        if (col !== -1) {
+          values[row][col] = feedback[key];
+        } else {
+          Logger.log(`Column "${key}" not found in sheet "${sheetName}".`);
         }
       }
+      break;
     }
   }
 
-  sheet.getRange(1, 1, data.length, data[0].length).setValues(data);
+  sheet.getRange(1, 1, values.length, values[0].length).setValues(values);
 }
