@@ -33,15 +33,17 @@ The GenAI Feedback Tool is a research-driven system developed to address the cha
 
 ## Project Structure
 
-- `Main.gs` — Main entry point; connects modules  
-- `GenAI_Rating.gs` — GPT scoring logic using rubric prompts  
-- `New_Submissions.gs` — Canvas + Google Docs integration logic  
-- `Micro_Rubric.gs` — Section-specific prompt content  
-- `pushToCanvas.gs` — Posts grades/comments back to Canvas (in progress)
+- `Main.gs` — Main entry point; coordinates grading checkpoints
+- `GenAI_Rating.gs` — GPT scoring logic using rubric prompts
+- `GetSubmissions.gs` — Canvas + Google Docs integration logic
+- `MicroRubric.gs` — Micro-Internship specific rubric definitions
+- `SOSERubric.gs` — SOSE specific rubric definitions
+- `EmailDrafter.gs` — Drafts personalized feedback emails for students
+- `README.md` — Project documentation
 
 ## How It Works
 
-1. **New_Submissions.gs** uses a paginated Canvas API fetch to collect all submissions, then filters by Canvas IDs listed in each Micro-Internship Sheet.
+1. **GetSubmissions.gs** uses a paginated Canvas API fetch to collect all submissions, then filters by Canvas IDs listed in each Micro-Internship Sheet.
 2. **GenAI_Rating.gs** generates structured prompts per rubric section, calls GPT via the OpenAI API, and interprets results.
 3. **Main.gs** coordinates which checkpoints to run and what sections to grade.
 4. **(Optional)** `pushToCanvas.gs` pushes scores and comments back to Canvas using the submission comment API.
@@ -61,4 +63,3 @@ This project is under development for educational use through the Computing Tale
 
 Made with purpose by **Sergio Zavala**  
 [LinkedIn](https://www.linkedin.com/in/sergiozavala1) • [Website](https://sergiozavala.dev) • [GitHub](https://github.com/sezavala)
-
