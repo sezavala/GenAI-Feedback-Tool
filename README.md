@@ -85,7 +85,4 @@ The GenAI Feedback Tool is a research-driven system designed to solve the challe
 
 _Use this section to paste a screenshot or render of your full GenAI Feedback Tool architecture diagram. Include icons for Canvas, Google Docs, Sheets, GPT, and Email._
 
-> 📎 You can paste or upload your image here in markdown:
-```markdown
-![System Diagram](./genai_feedback_diagram.png)
-[GenAIFeedbackDiagram.pdf](https://ibb.co/bgHqG5M3)
+<img src="https://i.postimg.cc/xCzKvGtx/Gen-AIFeedback-Diagram.png" alt="System Diagram" width="800"/>
