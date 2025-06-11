@@ -30,8 +30,7 @@ Rubric:
 Impact: Did the student explain how the issue affects users or functionality?
 Clarity: Is the reasoning well-organized and easy to follow?
 Ignore grammar. Provide feedback in 3 sentences: 1 for Impact, 1 for Clarity, and 1 for overall feedback.`,
-    "Blog Post Checkpoint #1 - Score": `From 1 to 5. Only use whole numbers.`,
-    "Blog Post Checkpoint #1 - Feedback": `Write 3–4 full sentences that summarize how the student did overall. Highlight their strengths and identify key areas for improvement.`
+    "Blog Post Checkpoint #1 - Score": `From 1 to 5. Only use whole numbers.`
 };
 
 const SOSE_CH1_Data = {
@@ -41,7 +40,6 @@ const SOSE_CH1_Data = {
     'Section2A': '',
     'Section2B': '',
     'Blog Post Checkpoint #1 - Score': 0,
-    'Blog Post Checkpoint #1 - Feedback': ''
 };
 
 const SOSE_CH1_Rubric = `Purpose: Get started on your blog post and complete the first two sections.
@@ -67,15 +65,13 @@ Clear: Is the student clear on what specific use case they will be presenting?
 Backend: Does the student's answer include at least one tool used in the backend for their specific use case? 
 Result: Did the student include the result of their workflow example?
 Don’t score grammar. Provide feedback in 3 sentences: 1 for Clear, 1 for Backend, 1 for Result, and 1 for overall feedback.`,
-    "Blog Post Checkpoint #2 - Score": `From 1 to 5. Only use whole numbers.`,
-    "Blog Post Checkpoint #2 - Feedback": `Write 3–4 full sentences that summarize how the student did overall. Highlight their strengths and identify key areas for improvement.`
+    "Blog Post Checkpoint #2 - Score": `From 1 to 5. Only use whole numbers.`
 };
 
 const SOSE_CH2_Data = {
     'Section3A': '',
     'Section3C': '',
     'Blog Post Checkpoint #2 - Score': 0,
-    'Blog Post Checkpoint #2 - Feedback': ''
 };
 
 const SOSE_CH2_Rubric = `Purpose: Continue building your blog post
@@ -107,8 +103,7 @@ Rubric:
 Status: Does the student include a status on whether they solved their issue?
 Future Steps: If the student was unable to resolve the issue, do they provide extra steps that they could take to search for a solution?
 Don’t score grammar. Provide feedback in 3 sentences: 1 for Status, 1 for Future Steps, and 1 for overall feedback.`,
-    "Blog Post Checkpoint #3 - Score": `From 1 to 5. Only use whole numbers.`,
-    "Blog Post Checkpoint #3 - Feedback": `Write 3–4 full sentences that summarize how the student did overall. Highlight their strengths and identify key areas for improvement.`
+    "Blog Post Checkpoint #3 - Score": `From 1 to 5. Only use whole numbers.`
 };
 
 const SOSE_CH3_Data = {
@@ -116,8 +111,7 @@ const SOSE_CH3_Data = {
     'Section4B': '',
     'Section4C': '',
     'Section4D': '',
-    'Blog Post Checkpoint #3 - Score': 0,
-    'Blog Post Checkpoint #3 - Feedback': ''
+    'Blog Post Checkpoint #3 - Score': 0
 };
 
 const SOSE_CH3_Rubric = `Purpose: Continue building your blog post
@@ -146,16 +140,14 @@ The student should provide at least one form of proof that their solution works.
 Rubric:
 Proof: Does the student provide at least one form of proof that their solution works. (e.g., screenshot, gifs, videos, quotes from PR maintainer)
 Don’t score grammar. On a scale from 1-10, rate how helpful their evidence is, and suggest better forms of proof if applicable. Provide feedback in 2 sentences: 1 for Proof, and 1 for overall feedback.`,
-    "Blog Post Checkpoint #4 - Score": `From 1 to 5. Only use whole numbers.`,
-    "Blog Post Checkpoint #4 - Feedback": `Write 3–4 full sentences that summarize how the student did overall. Highlight their strengths and identify key areas for improvement.`
+    "Blog Post Checkpoint #4 - Score": `From 1 to 5. Only use whole numbers.`
 };
 
 const SOSE_CH4_Data = {
     'Section5A': '',
     'Section5B': '',
     'Section5C': '',
-    'Blog Post Checkpoint #4 - Score': 0,
-    'Blog Post Checkpoint #4 - Feedback': ''
+    'Blog Post Checkpoint #4 - Score': 0
 };
 
 const SOSE_CH4_Rubric = `Purpose: Continue building your blog post
@@ -253,8 +245,7 @@ Feedback on how the solution solved the issue
 Feedback on tech/framework and system diagram references
 Feedback on evidence or proof provided
 Overall summary of Section 5`,
-    'Blog Post Checkpoint #5 - Score (Can we recreate the solution by reading the blog)': `a technical blog post which describes a pull request for an open source project, on a scale of 1 - 5, tell me how likely it is that a developer if they read the blog post could recreate the solution only by following the steps described in the blog post.`,
-    'Blog Post Checkpoint #5 - Feedback': `Write 4-6 full sentences that summarize how the student did overall. Highlight their strengths and identify key areas for improvement.`
+    'Blog Post Checkpoint #5 - Score (Can we recreate the solution by reading the blog)': `a technical blog post which describes a pull request for an open source project, on a scale of 1 - 5, tell me how likely it is that a developer if they read the blog post could recreate the solution only by following the steps described in the blog post.`
 };
 
 const SOSE_CH5_Data = {
@@ -263,8 +254,7 @@ const SOSE_CH5_Data = {
     'Section3': '',
     'Section4': '',
     'Section5': '',
-    'Blog Post Checkpoint #5 - Score (Can we recreate the solution by reading the blog)': 0,
-    'Blog Post Checkpoint #5 - Feedback': ''
+    'Blog Post Checkpoint #5 - Score (Can we recreate the solution by reading the blog)': 0
 };
 
 const SOSE_CH5_Rubric = `In the previous week, the goal was to create a draft of your blog post article and get it reviewed by your peers / mentor. Update your blog post based on the feedback you received and submit your final version here as a pdf document.`;
