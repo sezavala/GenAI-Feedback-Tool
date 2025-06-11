@@ -65,7 +65,7 @@ The GenAI Feedback Tool is a system designed to solve the challenge of deliverin
 | `GetSubmissions.gs` | Interfaces with Canvas & Google Docs |
 | `MicroRubric.gs` | Rubric definitions for Micro-Internship |
 | `SOSERubric.gs` | Rubric definitions for SOSE |
-| `DraftEmail.gs` | Email drafting, approval, and status tracking |
+| `EmailDrafter.gs` | Email drafting, approval, and status tracking |
 | `pushToCanvas.gs` | Pushes scores/comments to Canvas LMS |
 | `README.md` | Project documentation and setup |
 
@@ -77,7 +77,7 @@ The GenAI Feedback Tool is a system designed to solve the challenge of deliverin
 2. 📬 `GetSubmissions.gs` collects all Canvas submissions and parses Google Docs content.
 3. 🤖 `GenAI_Rating.gs` loads the correct rubric, calls the fine-tuned GPT model, and returns JSON feedback.
 4. 📊 `Grading.gs` writes structured feedback and scores to the right columns in the sheet.
-5. ✉️ `DraftEmail.gs` checks for feedback completion and drafts personalized emails for students.
+5. ✉️ `EmailDrafter.gs` checks for feedback completion and drafts personalized emails for students.
 6. ✅ Instructor can review/edit and mark email for send-out.
 
 ---
