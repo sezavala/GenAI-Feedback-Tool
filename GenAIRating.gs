@@ -1,3 +1,5 @@
+const OPENAI_API_KEY = PropertiesService.getScriptProperties().getProperty('OPENAI_API_KEY');
+
 function getLatestFineTuneModel() {
   const response = UrlFetchApp.fetch("https://api.openai.com/v1/fine_tuning/jobs?limit=3", {
     method: "GET",
