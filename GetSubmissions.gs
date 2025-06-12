@@ -1,3 +1,5 @@
+const CANVAS_API_TOKEN = PropertiesService.getScriptProperties().getProperty('CANVAS_API_TOKEN');
+
 function getNewSubmissions(courseId, assignmentId, sheetName, checkpoint1) {
   const headers = { Authorization: 'Bearer ' + CANVAS_API_TOKEN };
   const baseUrl = `https://cti-courses.instructure.com/api/v1/courses/${courseId}/assignments/${assignmentId}/submissions?include[]=submission_history&per_page=100`;
